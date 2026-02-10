@@ -1434,7 +1434,9 @@ class Receivings extends Secure_area
 		$data['validation_message_type'] = $this->session->flashdata('receivings_validation_message_type') ?: 'success';
 		$data['receiving_validated_at'] = $receiving_info['validated_at'];
 		$data['receiving_validated_by_name'] = '';
-		$data['can_validate_receiving'] = $this->Employee->has_module_action_permission('receivings', 'edit_receiving', $this->Employee->get_logged_in_employee_info()->person_id);
+		$data['can_validate_receiving'] = $this->Employee->has_module_action_permission('receivings', 'validate_receiving', $this->Employee->get_logged_in_employee_info()->person_id);
+		$data['show_store_account_payment_status'] = $this->Receiving->is_store_account_charge_receiving($receiving_id);
+		$data['is_store_account_receiving_paid'] = $data['show_store_account_payment_status'] ? $this->Receiving->is_store_account_charge_receiving_paid($receiving_id) : NULL;
 
 		if (!empty($receiving_info['validated_by']))
 		{
@@ -1469,7 +1471,7 @@ class Receivings extends Secure_area
 
 	function validate_receiving($receiving_id)
 	{
-		$this->check_action_permission('edit_receiving');
+		$this->check_action_permission('validate_receiving');
 
 		if (!$this->db->field_exists('validated_by', 'receivings') || !$this->db->field_exists('validated_at', 'receivings'))
 		{

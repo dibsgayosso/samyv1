@@ -73,6 +73,13 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 							</form>
 						</li>
 					<?php } ?>
+					<?php if (!empty($show_store_account_payment_status)) { ?>
+						<li>
+							<button type="button" class="btn btn-<?php echo !empty($is_store_account_receiving_paid) ? 'success' : 'danger'; ?> btn-lg hidden-print" disabled>
+								<?php echo lang('receivings_payment_status', '', array(), TRUE).': '.(!empty($is_store_account_receiving_paid) ? lang('common_paid', '', array(), TRUE) : lang('common_unpaid', '', array(), TRUE)); ?>
+							</button>
+						</li>
+					<?php } ?>
 					<li>
 						<button class="btn btn-primary btn-lg hidden-print" id="barcode_labels_button" onClick="window.location='<?php echo site_url('items/generate_barcodes_labels_from_recv/' . $receiving_id_raw); ?>'" ;> <?php echo lang('common_barcode_labels', '', array(), TRUE); ?> </button>
 					</li>
@@ -158,6 +165,9 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 							} ?>
 							<li id="employee"><span><?php echo lang('common_employee', '', array(), TRUE) . ": "; ?></span><?php echo H($employee); ?></li>
 							<li id="receiving_validation_status"><span><?php echo lang('receivings_validation_status', '', array(), TRUE) . ": "; ?></span><?php echo empty($receiving_validated_at) ? lang('receivings_validation_pending', '', array(), TRUE) : lang('receivings_validation_approved', '', array(), TRUE); ?></li>
+							<?php if (!empty($show_store_account_payment_status)) { ?>
+								<li id="receiving_payment_status"><span><?php echo lang('receivings_payment_status', '', array(), TRUE) . ": "; ?></span><?php echo !empty($is_store_account_receiving_paid) ? lang('common_paid', '', array(), TRUE) : lang('common_unpaid', '', array(), TRUE); ?></li>
+							<?php } ?>
 							<?php if (!empty($receiving_validated_at)) { ?>
 								<li id="receiving_validated_by"><span><?php echo lang('receivings_validated_by', '', array(), TRUE) . ": "; ?></span><?php echo H($receiving_validated_by_name ?: lang('common_not_set')); ?></li>
 								<li id="receiving_validated_at"><span><?php echo lang('common_date', '', array(), TRUE) . ": "; ?></span><?php echo H(date(get_date_format() . ' ' . get_time_format(), strtotime($receiving_validated_at))); ?></li>

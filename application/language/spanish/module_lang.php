@@ -95,6 +95,7 @@ $lang['module_work_orders'] = 'Órdenes de trabajo';
 $lang['module_work_orders_desc'] = 'Órdenes de trabajo';
 $lang['module_manage_statuses'] = 'Administrar estados';
 $lang['module_action_delete_suspended_receiving'] = 'Eliminar recepción suspendida';
+$lang['module_action_validate_receiving'] = 'Validar recepción';
 $lang['module_invoices'] = 'Facturas';
 $lang['invoices_add'] = 'Agregar factura';
 $lang['invoices_edit'] = 'Editar factura';

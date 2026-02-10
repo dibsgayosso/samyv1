@@ -1898,7 +1898,25 @@ class Receiving extends MY_Model
 		$this->db->where('receiving_id',$recv_id);
 		return $this->db->get();
 	}
-	
+
+	function is_store_account_charge_receiving($receiving_id)
+	{
+		$store_account_in_all_languages = get_all_language_values_for_key('common_store_account','common');
+
+		$this->db->from('receivings_payments');
+		$this->db->where('receiving_id', $receiving_id);
+		$this->db->where_in('payment_type', $store_account_in_all_languages);
+		return $this->db->count_all_results() > 0;
+	}
+
+	function is_store_account_charge_receiving_paid($receiving_id)
+	{
+		$this->db->from('supplier_store_accounts_paid_receivings');
+		$this->db->where('receiving_id', $receiving_id);
+		$this->db->where('partial_payment_amount', 0);
+		return $this->db->count_all_results() > 0;
+	}
+
 	function get_unpaid_store_account_recv_ids($supplier_id,$limit = 30)
 	{
 		
