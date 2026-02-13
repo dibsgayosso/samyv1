@@ -135,4 +135,9 @@ $lang['receivings_validation_success'] = 'Receiving validated successfully.';
 $lang['receivings_validation_failed'] = 'Unable to validate receiving.';
 $lang['receivings_validation_already_done'] = 'Receiving was already validated.';
 $lang['receivings_validation_missing_columns'] = 'Validation columns are missing. Please run the receivings validation migration.';
+$lang['receivings_go_to_payments'] = 'Go To Payments';
+$lang['receivings_validation_pending_payment_redirect'] = 'The receiving must be validated before registering payments.';
+$lang['receivings_supplier_required_payment_redirect'] = 'A supplier is required to register payments for this receiving.';
+$lang['receivings_not_store_account_charge'] = 'This receiving is not a store account charge.';
+$lang['receivings_already_paid_redirect'] = 'This receiving is already paid.';
 ?>

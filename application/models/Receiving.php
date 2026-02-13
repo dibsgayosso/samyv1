@@ -1969,6 +1969,18 @@ class Receiving extends MY_Model
 		$this->db->group_by('receiving_id');
 		return $this->db->get()->result_array();
 	}
+
+	function get_unpaid_store_account_receiving_amount($receiving_id)
+	{
+		$unpaid_receivings = $this->get_unpaid_store_account_recvs(array($receiving_id));
+
+		if (empty($unpaid_receivings))
+		{
+			return 0;
+		}
+
+		return (float)$unpaid_receivings[0]['payment_amount'];
+	}
 	
 	function mark_all_unpaid_receivings_paid($supplier_id = '')
 	{

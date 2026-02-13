@@ -1435,6 +1435,7 @@ class Receivings extends Secure_area
 		$data['receiving_validated_at'] = $receiving_info['validated_at'];
 		$data['receiving_validated_by_name'] = '';
 		$data['can_validate_receiving'] = $this->Employee->has_module_action_permission('receivings', 'validate_receiving', $this->Employee->get_logged_in_employee_info()->person_id);
+		$data['can_receive_store_account_payment'] = $this->Employee->has_module_action_permission('receivings', 'receive_store_account_payment', $this->Employee->get_logged_in_employee_info()->person_id);
 		$data['show_store_account_payment_status'] = $this->Receiving->is_store_account_charge_receiving($receiving_id);
 		$data['is_store_account_receiving_paid'] = $data['show_store_account_payment_status'] ? $this->Receiving->is_store_account_charge_receiving_paid($receiving_id) : NULL;
 
@@ -1507,6 +1508,76 @@ class Receivings extends Secure_area
 		}
 
 		redirect('receivings/receipt/'.$receiving_id);
+	}
+
+	function go_to_store_account_payments($receiving_id)
+	{
+		$this->check_action_permission('receive_store_account_payment');
+
+		$receiving_info = $this->Receiving->get_info($receiving_id)->row_array();
+		if (!$receiving_info)
+		{
+			redirect('receivings');
+		}
+
+		if (empty($receiving_info['validated_at']))
+		{
+			$this->session->set_flashdata('receivings_validation_message', lang('receivings_validation_pending_payment_redirect'));
+			$this->session->set_flashdata('receivings_validation_message_type', 'warning');
+			redirect('receivings/receipt/'.$receiving_id);
+		}
+
+		if (empty($receiving_info['supplier_id']))
+		{
+			$this->session->set_flashdata('receivings_validation_message', lang('receivings_supplier_required_payment_redirect'));
+			$this->session->set_flashdata('receivings_validation_message_type', 'warning');
+			redirect('receivings/receipt/'.$receiving_id);
+		}
+
+		if (!$this->Receiving->is_store_account_charge_receiving($receiving_id))
+		{
+			$this->session->set_flashdata('receivings_validation_message', lang('receivings_not_store_account_charge'));
+			$this->session->set_flashdata('receivings_validation_message_type', 'warning');
+			redirect('receivings/receipt/'.$receiving_id);
+		}
+
+		$amount_to_pay = $this->Receiving->get_unpaid_store_account_receiving_amount($receiving_id);
+		if ($amount_to_pay <= 0)
+		{
+			$this->session->set_flashdata('receivings_validation_message', lang('receivings_already_paid_redirect'));
+			$this->session->set_flashdata('receivings_validation_message_type', 'success');
+			redirect('receivings/receipt/'.$receiving_id);
+		}
+
+		$this->cart->set_mode('store_account_payment');
+		$store_account_payment_item_id = $this->Item->create_or_update_store_account_item();
+		$this->cart->empty_items();
+		$this->cart->add_item(new PHPPOSCartItemRecv(
+			array(
+				'cost_price' => 0,
+				'unit_price' => 0,
+				'scan' => $store_account_payment_item_id.'|FORCE_ITEM_ID|',
+				'cart' => $this->cart,
+			)
+		));
+
+		$this->cart->supplier_id = $receiving_info['supplier_id'];
+		$this->cart->delete_all_paid_store_account_payment_ids();
+		$this->cart->add_paid_store_account_payment_id($receiving_id, $amount_to_pay);
+
+		foreach($this->cart->get_items() as $item)
+		{
+			if ($item->name == lang('common_store_account_payment'))
+			{
+				$item->unit_price = $amount_to_pay;
+				break;
+			}
+		}
+
+		$this->cart->comment = lang('receivings_pays_receivings'). ' - '.$receiving_id;
+		$this->cart->save();
+
+		redirect('receivings');
 	}
 	
 	function edit($receiving_id)

@@ -139,4 +139,9 @@ $lang['receivings_validation_success'] = 'Recepción validada correctamente.';
 $lang['receivings_validation_failed'] = 'No se pudo validar la recepción.';
 $lang['receivings_validation_already_done'] = 'La recepción ya estaba validada.';
 $lang['receivings_validation_missing_columns'] = 'Faltan las columnas de validación. Ejecute la migración de receivings.';
+$lang['receivings_go_to_payments'] = 'Ir a pagos';
+$lang['receivings_validation_pending_payment_redirect'] = 'La recepción debe estar validada antes de registrar pagos.';
+$lang['receivings_supplier_required_payment_redirect'] = 'Se requiere un proveedor para registrar pagos en esta recepción.';
+$lang['receivings_not_store_account_charge'] = 'Esta recepción no es un cargo a cuenta.';
+$lang['receivings_already_paid_redirect'] = 'Esta recepción ya está pagada.';
 ?>

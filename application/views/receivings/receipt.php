@@ -85,6 +85,11 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 							</button>
 						</li>
 					<?php } ?>
+					<?php if (!empty($show_store_account_payment_status) && empty($is_store_account_receiving_paid) && !empty($receiving_validated_at) && !empty($can_receive_store_account_payment)) { ?>
+						<li>
+							<button class="btn btn-warning btn-lg hidden-print" id="go_to_payments_button" onClick="window.location='<?php echo site_url('receivings/go_to_store_account_payments/' . $receiving_id_raw); ?>'"> <?php echo lang('receivings_go_to_payments', '', array(), TRUE); ?> </button>
+						</li>
+					<?php } ?>
 					<li>
 						<button class="btn btn-primary btn-lg hidden-print" id="barcode_labels_button" onClick="window.location='<?php echo site_url('items/generate_barcodes_labels_from_recv/' . $receiving_id_raw); ?>'" ;> <?php echo lang('common_barcode_labels', '', array(), TRUE); ?> </button>
 					</li>
