@@ -7,10 +7,11 @@ if (isset($error_message)) {
 	exit;
 }
 
-$company = ($company = $this->Location->get_info_for_key('company', isset($override_location_id) ? $override_location_id : FALSE)) ? $company : $this->config->item('company');
-$company_logo = ($company_logo = $this->Location->get_info_for_key('company_logo', isset($override_location_id) ? $override_location_id : FALSE)) ? $company_logo : $this->config->item('company_logo');
+	$company = ($company = $this->Location->get_info_for_key('company', isset($override_location_id) ? $override_location_id : FALSE)) ? $company : $this->config->item('company');
+	$location_name = ($location_name = $this->Location->get_info_for_key('name', isset($override_location_id) ? $override_location_id : FALSE)) ? $location_name : $company;
+	$company_logo = ($company_logo = $this->Location->get_info_for_key('company_logo', isset($override_location_id) ? $override_location_id : FALSE)) ? $company_logo : $this->config->item('company_logo');
 
-$item_custom_fields_to_display = array();
+	$item_custom_fields_to_display = array();
 $supplier_custom_fields_to_display = array();
 $receiving_custom_fields_to_display = array();
 
@@ -30,9 +31,13 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 	if ($supplier_custom_field) {
 		$supplier_custom_fields_to_display[] = $k;
 	}
-}
+	}
 
-?>
+	$validation_status_label = empty($receiving_validated_at) ? lang('receivings_validation_pending', '', array(), TRUE) : lang('receivings_validation_approved', '', array(), TRUE);
+	$payment_status_label = !empty($show_store_account_payment_status) ? (!empty($is_store_account_receiving_paid) ? lang('common_paid', '', array(), TRUE) : lang('common_unpaid', '', array(), TRUE)) : lang('common_not_set', '', array(), TRUE);
+	$validation_status_datetime = !empty($receiving_validated_at) ? date(get_date_format() . ' ' . get_time_format(), strtotime($receiving_validated_at)) : $transaction_time;
+
+	?>
 <!-- Css Loader  -->
 <div class="spinner hidden" id="ajax-loader" style="width:100vw;  height:100vh;">
 	<div class="rect1"></div>
@@ -132,114 +137,31 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 <div <?php echo $this->config->item('uppercase_receipts') ? 'style="text-transform: uppercase !important"' : ''; ?> class="row manage-table receipt_<?php echo $this->config->item('receipt_text_size') ? $this->config->item('receipt_text_size') : 'small'; ?>" id="receipt_wrapper">
 	<div class="col-md-12" id="receipt_wrapper_inner">
 		<div class="panel panel-piluku">
-			<div class="panel-body panel-pad">
-				<div class="row">
-					<div class="col-md-4 col-sm-4 col-xs-12">
-						<ul class="list-unstyled invoice-address">
-							<?php if ($company_logo) { ?>
-								<li id="company_logo" class="invoice-logo">
-									<?php echo img(array('src' => $this->Appfile->get_url_for_file($company_logo))); ?>
-								</li>
-							<?php } ?>
-							<li id="company_name" class="company-title"><?php echo H($company); ?></li>
-							<li id="company_address" class="nl2br"><?php echo H($this->Location->get_info_for_key('address', isset($override_location_id) ? $override_location_id : FALSE)); ?></li>
-							<li id="company_phone"><?php echo H($this->Location->get_info_for_key('phone', isset($override_location_id) ? $override_location_id : FALSE)); ?></li>
-							<li id="sale_receipt"><?php echo H($is_po ? lang('receivings_purchase_order', '', array(), TRUE) : ($mode == 'return' ?  $receipt_title." ".lang('receivings_return') : $receipt_title)); ?></li>
-							<li id="sale_time"><?php echo H($transaction_time); ?></li>
-						</ul>
-					</div>
-					<!--  sales-->
-					<div class="col-md-4 col-sm-4 col-xs-12">
-						<ul class="list-unstyled invoice-detail">
-
-							<?php if (isset($deleted) && $deleted) { ?>
-								<li><span class="text-danger" style="color: #df6c6e;"><strong><?php echo lang('sales_deleted_voided', '', array(), TRUE); ?></strong></span></li>
-							<?php } ?>
-
-							<?php if (!isset($transfer_to_location)) { ?>
-								<li id="receiving_id"><span><?php echo $is_po ? lang('receivings_purchase_order', '', array(), TRUE) : lang('receivings_id', '', array(), TRUE) . ": "; ?></span><?php echo $is_po ? H($receiving_id_raw) : H($receiving_id); ?></li>
-							<?php } else {
-							?>
-								<li id="receiving_id"><span><?php echo lang('receivings_transfer_id', '', array(), TRUE) . ": "; ?></span><?php echo H($receiving_id_raw); ?></li>
-							<?php
-							} ?>
-							<li id="employee"><span><?php echo lang('common_employee', '', array(), TRUE) . ": "; ?></span><?php echo H($employee); ?></li>
-							<li id="receiving_validation_status"><span><?php echo lang('receivings_validation_status', '', array(), TRUE) . ": "; ?></span><?php echo empty($receiving_validated_at) ? lang('receivings_validation_pending', '', array(), TRUE) : lang('receivings_validation_approved', '', array(), TRUE); ?></li>
-							<?php if (!empty($show_store_account_payment_status)) { ?>
-								<li id="receiving_payment_status"><span><?php echo lang('receivings_payment_status', '', array(), TRUE) . ": "; ?></span><?php echo !empty($is_store_account_receiving_paid) ? lang('common_paid', '', array(), TRUE) : lang('common_unpaid', '', array(), TRUE); ?></li>
-							<?php } ?>
-							<?php if (!empty($receiving_validated_at)) { ?>
-								<li id="receiving_validated_by"><span><?php echo lang('receivings_validated_by', '', array(), TRUE) . ": "; ?></span><?php echo H($receiving_validated_by_name ?: lang('common_not_set')); ?></li>
-								<li id="receiving_validated_at"><span><?php echo lang('common_date', '', array(), TRUE) . ": "; ?></span><?php echo H(date(get_date_format() . ' ' . get_time_format(), strtotime($receiving_validated_at))); ?></li>
-							<?php } ?>
-						</ul>
-					</div>
-					<?php if (isset($supplier) || isset($transfer_to_location)) { ?>
+				<div class="panel-body panel-pad">
+					<div class="row">
 						<div class="col-md-4 col-sm-4 col-xs-12">
-							<ul class="list-unstyled invoice-address invoiceto">
-								<?php if (isset($supplier)) { ?>
-									<li id="supplier"><?php echo lang('common_supplier', '', array(), TRUE) . ": " . H($supplier); ?></li>
-									<?php if (!empty($supplier_address_1)) { ?><li><?php echo lang('common_address', '', array(), TRUE); ?> : <?php echo H($supplier_address_1 . ' ' . $supplier_address_2); ?></li><?php } ?>
-									<?php if (!empty($supplier_city)) {
-										echo '<li>' . H($supplier_city . ' ' . $supplier_state . ', ' . $supplier_zip) . '</li>';
-									} ?>
-									<?php if (!empty($supplier_country)) {
-										echo '<li>' . H($supplier_country) . '</li>';
-									} ?>
-									<?php if (!empty($supplier_phone)) { ?><li><?php echo lang('common_phone_number', '', array(), TRUE); ?> : <?php echo H(format_phone_number($supplier_phone)); ?></li><?php } ?>
-									<?php if (!empty($supplier_email)) { ?><li><?php echo lang('common_email', '', array(), TRUE); ?> : <?php echo H($supplier_email); ?></li><?php } ?>
-
-									<?php
-									foreach ($supplier_custom_fields_to_display as $custom_field_id) {
-									?>
-										<?php
-
-										$supplier_info = $this->Supplier->get_info($supplier_id);
-
-										if ($supplier_info->{"custom_field_${custom_field_id}_value"}) {
-										?>
-											<div class="invoice-desc">
-												<?php
-
-												if ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'checkbox') {
-													$format_function = 'boolean_as_string';
-												} elseif ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'date') {
-													$format_function = 'date_as_display_date';
-												} elseif ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'email') {
-													$format_function = 'strsame';
-												} elseif ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'url') {
-													$format_function = 'strsame';
-												} elseif ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'phone') {
-													$format_function = 'format_phone_number';
-												} elseif ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'image') {
-													$this->load->helper('url');
-													$format_function = 'file_id_to_image_thumb_right';
-												} elseif ($this->Supplier->get_custom_field($custom_field_id, 'type') == 'file') {
-													$this->load->helper('url');
-													$format_function = 'file_id_to_download_link';
-												} else {
-													$format_function = 'strsame';
-												}
-
-												echo '<li><span>' . lang('common_supplier', '', array(), TRUE) . ' ' . ($this->Supplier->get_custom_field($custom_field_id, 'hide_field_label') ? '' : $this->Supplier->get_custom_field($custom_field_id, 'name') . ':') . '</span> ' . $format_function($supplier_info->{"custom_field_${custom_field_id}_value"}) . '</li>';
-												?>
-											</div>
-									<?php
-										}
-									}
-									?>
-
-
-
+							<ul class="list-unstyled invoice-address">
+								<?php if ($company_logo) { ?>
+									<li id="company_logo" class="invoice-logo">
+										<?php echo img(array('src' => $this->Appfile->get_url_for_file($company_logo))); ?>
+									</li>
 								<?php } ?>
-								<?php if (isset($transfer_to_location)) { ?>
-									<li id="transfer_from"><span><?php echo lang('receivings_transfer_from', '', array(), TRUE) . ': ' ?></span><?php echo H($transfer_from_location); ?></li>
-									<li id="transfer_to"><span><?php echo lang('receivings_transfer_to', '', array(), TRUE) . ': ' ?></span><?php echo H($transfer_to_location); ?></li>
-								<?php } ?>
+								<li id="branch_name" class="company-title"><?php echo lang('common_location', '', array(), TRUE) . ': ' . H($location_name); ?></li>
 							</ul>
 						</div>
-					<?php } ?>
-				</div>
+						<div class="col-md-4 col-sm-4 col-xs-12">
+							<ul class="list-unstyled invoice-address invoiceto">
+								<li id="supplier"><?php echo lang('common_supplier', '', array(), TRUE) . ': ' . H(isset($supplier) ? $supplier : lang('common_not_set', '', array(), TRUE)); ?></li>
+							</ul>
+						</div>
+						<div class="col-md-4 col-sm-4 col-xs-12">
+							<div class="receipt-status-box">
+								<div class="status-line"><?php echo lang('receivings_validation_status', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_label); ?></strong></div>
+								<div class="status-line"><?php echo lang('common_date', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_datetime); ?></strong></div>
+								<div class="status-line"><?php echo lang('receivings_payment_status', '', array(), TRUE); ?>: <strong><?php echo H($payment_status_label); ?></strong></div>
+							</div>
+						</div>
+					</div>
 
 				<?php
 				$x_col = 6;
@@ -549,73 +471,13 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 				</div>
 			</div>
 
-			<div class="invoice-footer panel-pad">
-
-				<?php if ($exchange_name) { ?>
-
-					<div class="row">
-						<div class="col-md-offset-4 col-sm-offset-4 col-md-6 col-sm-6 col-xs-8">
-							<div class="invoice-footer-heading"><?php echo lang('common_exchange_to', '', array(), TRUE) . ' ' . H($exchange_name); ?></div>
-						</div>
-						<div class="col-md-2 col-sm-2 col-xs-4">
-							<div class="invoice-footer-value">x <?php echo to_currency_no_money($exchange_rate); ?></div>
-						</div>
-					</div>
-
-				<?php } ?>
-
-				<?php
-				if (!$this->config->item('hide_all_prices_on_recv') && $has_cost_price_permission) {
-				?>
-
-					<?php if (!empty($taxes)) { ?>
+				<div class="invoice-footer panel-pad">
+					<?php
+					if (!$this->config->item('hide_all_prices_on_recv') && $has_cost_price_permission) {
+					?>
 						<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
 							<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-heading sub-total-heading"><?php echo lang('common_sub_total', '', array(), TRUE); ?></div>
-							</div>
-							<div class="col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-value">
-									<?php
-								if (isset($exchange_name) && $exchange_name) {
-									echo to_currency_as_exchange($cart, $subtotal);
-								} else {
-									echo to_currency($subtotal);
-								}
-								?>
-								</div>
-							</div>
-						</div>
-						<?php if ($this->config->item('group_all_taxes_on_receipt')) { ?>
-							<?php
-							$total_tax = 0;
-							foreach ($taxes as $name => $value) {
-								$total_tax += $value;
-							}
-							?>
-							<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-								<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-4">
-									<div class="invoice-footer-heading tax-heading"><?php echo lang('common_tax', '', array(), TRUE); ?></div>
-								</div>
-								<div class="col-md-2 col-sm-2 col-xs-4">
-									<div class="invoice-footer-value"><?php echo to_currency($total_tax); ?></div>
-								</div>
-							</div>
-						<?php } else { ?>
-							<?php foreach ($taxes as $name => $value) { ?>
-								<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-									<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-4">
-										<div class="invoice-footer-heading tax-heading"><?php echo H($name); ?></div>
-									</div>
-									<div class="col-md-2 col-sm-2 col-xs-4">
-										<div class="invoice-footer-value"><?php echo to_currency($value); ?></div>
-									</div>
-								</div>
-							<?php } ?>
-						<?php } ?>
-					<?php } ?>
-					<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-						<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-4">
-							<div class="invoice-footer-heading total-heading"><?php echo lang('common_total', '', array(), TRUE); ?></div>
+								<div class="invoice-footer-heading total-heading"><?php echo lang('common_total', '', array(), TRUE); ?></div>
 						</div>
 						<div class="col-md-2 col-sm-2 col-xs-4">
 							<div class="invoice-footer-value" style="font-size: 150%;font-weight: bold;;">
@@ -628,13 +490,14 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 								?>
 							</div>
 						</div>
-					</div>
-				<?php } //End hide all prices on recv
-				?>
-				<div class="row">
-					<?php if ($number_of_items_sold) { ?>
-						<div class="col-md-offset-4 col-sm-offset-4 col-md-6 col-sm-6 col-xs-8">
-							<div class="invoice-footer-heading"><?php echo lang('common_items_purchased', '', array(), TRUE); ?></div>
+						</div>
+					<?php } //End hide all prices on recv
+					?>
+
+					<div class="row">
+						<?php if ($number_of_items_sold) { ?>
+							<div class="col-md-offset-4 col-sm-offset-4 col-md-6 col-sm-6 col-xs-8">
+								<div class="invoice-footer-heading"><?php echo lang('common_items_purchased', '', array(), TRUE); ?></div>
 						</div>
 						<div class="col-md-2 col-sm-2 col-xs-4">
 							<div class="invoice-footer-value invoice-total"><?php echo to_quantity($number_of_items_sold); ?></div>
@@ -649,80 +512,11 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 						<div class="col-md-2 col-sm-2 col-xs-4">
 							<div class="invoice-footer-value invoice-total"><?php echo to_quantity($number_of_items_returned); ?></div>
 						</div>
-					<?php } ?>
+						<?php } ?>
+
+					</div>
 
 				</div>
-
-
-				<?php
-				if (!$this->config->item('hide_all_prices_on_recv') && $has_cost_price_permission) {
-				?>
-
-					<?php
-					foreach ($payments as $payment_id => $payment) {
-					?>
-						<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-							<div class="col-md-offset-4 col-sm-offset-4 col-md-4 col-sm-4 col-xs-4">
-								<div class="invoice-footer-heading"><?php echo (isset($show_payment_times) && $show_payment_times) ?  date(get_date_format() . ' ' . get_time_format(), strtotime($payment->payment_date)) : lang('common_payment', '', array(), TRUE); ?></div>
-							</div>
-							<div class="col-md-2 col-sm-4 col-xs-4">
-								<div class="invoice-footer-value"><?php $splitpayment = explode(':', $payment->payment_type);
-																	echo H($splitpayment[0]); ?></div>
-							</div>
-
-							<div class="col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-value invoice-payment">
-									<?php
-
-									if (isset($exchange_name) && $exchange_name) {
-									?>
-
-									<?php echo to_currency_as_exchange($cart, $payment->payment_amount); ?>
-
-									<?php } ?>
-								</div>
-							</div>
-						</div>
-					<?php
-					}
-					?>
-
-					<?php if (isset($amount_change)) { ?>
-						<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-							<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-heading"><?php echo lang('common_amount_tendered', '', array(), TRUE); ?></div>
-							</div>
-							<div class="col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-value"><?php echo to_currency($amount_tendered); ?></div>
-							</div>
-						</div>
-						<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-							<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-heading"><?php echo lang('common_change_due', '', array(), TRUE); ?></div>
-							</div>
-							<div class="col-md-2 col-sm-2 col-xs-4">
-								<div class="invoice-footer-value"><?php echo H($amount_change); ?></div>
-							</div>
-						</div>
-					<?php } ?>
-				<?php } //end hide all prices recv
-				?>
-
-				<?php if (isset($supplier_balance_for_sale) && (float)$supplier_balance_for_sale && !$this->config->item('hide_store_account_balance_on_receipt')) { ?>
-
-					<div class="row <?php echo ($mode == 'transfer' && !$see_cost_price) ? "hide" : ""; ?>">
-						<div class="col-md-offset-8 col-sm-offset-8 col-xs-offset-4 col-md-2 col-sm-2 col-xs-48">
-							<div class="invoice-footer-value"><?php echo lang('receivings_supplier_account_balance', '', array(), TRUE); ?></div>
-						</div>
-						<div class="col-md-2 col-sm-2 col-xs-4">
-							<div class="invoice-footer-value invoice-payment"><?php echo to_currency($supplier_balance_for_sale); ?></div>
-						</div>
-					</div>
-				<?php
-				}
-				?>
-
-			</div>
 
 
 			<!-- invoice footer -->
@@ -788,6 +582,19 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 </div>
 </div>
 <?php $this->load->view("partial/footer"); ?>
+<style>
+	.receipt-status-box {
+		border: 2px solid #333;
+		padding: 14px;
+		text-align: center;
+	}
+
+	.receipt-status-box .status-line {
+		font-size: 20px;
+		font-weight: 700;
+		margin-bottom: 8px;
+	}
+</style>
 <?php
 if ($this->config->item('allow_reorder_receiving_receipt')) 
 {
