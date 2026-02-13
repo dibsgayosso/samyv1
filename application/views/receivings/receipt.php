@@ -149,13 +149,10 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 								<li id="branch_name" class="company-title"><?php echo lang('common_location', '', array(), TRUE) . ': ' . H($location_name); ?></li>
 							</ul>
 						</div>
-						<div class="col-md-4 col-sm-4 col-xs-12">
-							<ul class="list-unstyled invoice-address invoiceto">
-								<li id="supplier"><?php echo lang('common_supplier', '', array(), TRUE) . ': ' . H(isset($supplier) ? $supplier : lang('common_not_set', '', array(), TRUE)); ?></li>
-							</ul>
-						</div>
+						<div class="col-md-4 col-sm-4 col-xs-12"></div>
 						<div class="col-md-4 col-sm-4 col-xs-12">
 							<div class="receipt-status-box">
+								<div class="status-line"><?php echo lang('common_supplier', '', array(), TRUE); ?>: <strong><?php echo H(isset($supplier) ? $supplier : lang('common_not_set', '', array(), TRUE)); ?></strong></div>
 								<div class="status-line"><?php echo lang('receivings_validation_status', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_label); ?></strong></div>
 								<div class="status-line"><?php echo lang('common_date', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_datetime); ?></strong></div>
 								<div class="status-line"><?php echo lang('receivings_payment_status', '', array(), TRUE); ?>: <strong><?php echo H($payment_status_label); ?></strong></div>
