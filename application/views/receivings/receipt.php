@@ -36,6 +36,7 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 	$validation_status_label = empty($receiving_validated_at) ? lang('receivings_validation_pending', '', array(), TRUE) : lang('receivings_validation_approved', '', array(), TRUE);
 	$payment_status_label = !empty($show_store_account_payment_status) ? (!empty($is_store_account_receiving_paid) ? lang('common_paid', '', array(), TRUE) : lang('common_unpaid', '', array(), TRUE)) : lang('common_not_set', '', array(), TRUE);
 	$validation_status_datetime = !empty($receiving_validated_at) ? date(get_date_format() . ' ' . get_time_format(), strtotime($receiving_validated_at)) : $transaction_time;
+	$validated_by_label = !empty($receiving_validated_by_name) ? $receiving_validated_by_name : lang('common_not_set', '', array(), TRUE);
 
 	?>
 <!-- Css Loader  -->
@@ -159,6 +160,7 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 							<div class="receipt-status-box">
 								<div class="status-line"><?php echo lang('common_supplier', '', array(), TRUE); ?>: <strong><?php echo H(isset($supplier) ? $supplier : lang('common_not_set', '', array(), TRUE)); ?></strong></div>
 								<div class="status-line"><?php echo lang('receivings_validation_status', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_label); ?></strong></div>
+								<div class="status-line"><?php echo lang('receivings_validated_by', '', array(), TRUE); ?>: <strong><?php echo H($validated_by_label); ?></strong></div>
 								<div class="status-line"><?php echo lang('common_date', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_datetime); ?></strong></div>
 								<div class="status-line"><?php echo lang('receivings_payment_status', '', array(), TRUE); ?>: <strong><?php echo H($payment_status_label); ?></strong></div>
 							</div>
