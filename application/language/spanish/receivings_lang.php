@@ -145,4 +145,9 @@ $lang['receivings_validation_pending_payment_redirect'] = 'La recepción debe es
 $lang['receivings_supplier_required_payment_redirect'] = 'Se requiere un proveedor para registrar pagos en esta recepción.';
 $lang['receivings_not_store_account_charge'] = 'Esta recepción no es un cargo a cuenta.';
 $lang['receivings_already_paid_redirect'] = 'Esta recepción ya está pagada.';
+$lang['receivings_payment_history'] = 'Historial de abonos';
+$lang['receivings_payment_made_by'] = 'Abono realizado por';
+$lang['receivings_payment_receiving_id'] = 'Recibo de abono';
+$lang['receivings_last_payment_by'] = 'Último abono por';
+$lang['receivings_last_payment_date'] = 'Fecha de último abono';
 ?>

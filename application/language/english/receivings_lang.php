@@ -141,4 +141,9 @@ $lang['receivings_validation_pending_payment_redirect'] = 'The receiving must be
 $lang['receivings_supplier_required_payment_redirect'] = 'A supplier is required to register payments for this receiving.';
 $lang['receivings_not_store_account_charge'] = 'This receiving is not a store account charge.';
 $lang['receivings_already_paid_redirect'] = 'This receiving is already paid.';
+$lang['receivings_payment_history'] = 'Payment History';
+$lang['receivings_payment_made_by'] = 'Payment made by';
+$lang['receivings_payment_receiving_id'] = 'Payment receiving';
+$lang['receivings_last_payment_by'] = 'Last payment by';
+$lang['receivings_last_payment_date'] = 'Last payment date';
 ?>

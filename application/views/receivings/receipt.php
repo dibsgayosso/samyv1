@@ -46,6 +46,7 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 	}
 	$validation_status_datetime = !empty($receiving_validated_at) ? date(get_date_format() . ' ' . get_time_format(), strtotime($receiving_validated_at)) : $transaction_time;
 	$validated_by_label = !empty($receiving_validated_by_name) ? $receiving_validated_by_name : lang('common_not_set', '', array(), TRUE);
+	$store_account_payment_logs = isset($store_account_payment_logs) && is_array($store_account_payment_logs) ? $store_account_payment_logs : array();
 
 	?>
 <!-- Css Loader  -->
@@ -176,10 +177,41 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 									<div class="status-line"><?php echo lang('common_total_charge_to_account', '', array(), TRUE); ?>: <strong><?php echo to_currency($store_account_payment_summary['total_charge']); ?></strong></div>
 									<div class="status-line"><?php echo lang('common_amount_paid', '', array(), TRUE); ?>: <strong><?php echo to_currency($store_account_payment_summary['paid_amount']); ?></strong></div>
 									<div class="status-line"><?php echo lang('common_amount_due', '', array(), TRUE); ?>: <strong><?php echo to_currency($store_account_payment_summary['remaining_amount']); ?></strong></div>
+									<?php if (!empty($store_account_payment_logs)) {
+										$last_payment_log = end($store_account_payment_logs);
+										$last_payment_employee_name = trim(($last_payment_log['first_name'] ?? '') . ' ' . ($last_payment_log['last_name'] ?? ''));
+									?>
+										<div class="status-line"><?php echo lang('receivings_last_payment_by', '', array(), TRUE); ?>: <strong><?php echo H($last_payment_employee_name ?: lang('common_not_set', '', array(), TRUE)); ?></strong></div>
+										<div class="status-line"><?php echo lang('receivings_last_payment_date', '', array(), TRUE); ?>: <strong><?php echo H(date(get_date_format() . ' ' . get_time_format(), strtotime($last_payment_log['payment_time']))); ?></strong></div>
+									<?php } ?>
 								<?php } ?>
 							</div>
 						</div>
 					</div>
+
+					<?php if (!empty($show_store_account_payment_status) && !empty($store_account_payment_logs)) { ?>
+						<div class="row" style="margin-top:10px;">
+							<div class="col-md-12 col-sm-12 col-xs-12">
+								<div class="invoice-table-content">
+									<div class="row">
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="invoice-content-heading"><?php echo lang('receivings_payment_history', '', array(), TRUE); ?></div>
+											<?php foreach ($store_account_payment_logs as $payment_log) {
+												$payment_employee_name = trim(($payment_log['first_name'] ?? '') . ' ' . ($payment_log['last_name'] ?? ''));
+											?>
+												<div class="invoice-desc">
+													<?php echo H(date(get_date_format() . ' ' . get_time_format(), strtotime($payment_log['payment_time']))); ?> -
+													<?php echo lang('common_amount_paid', '', array(), TRUE); ?>: <?php echo to_currency($payment_log['payment_amount']); ?> -
+													<?php echo lang('receivings_payment_made_by', '', array(), TRUE); ?>: <?php echo H($payment_employee_name ?: lang('common_not_set', '', array(), TRUE)); ?> -
+													<?php echo lang('receivings_payment_receiving_id', '', array(), TRUE); ?>: <?php echo H($payment_log['store_account_payment_receiving_id']); ?>
+												</div>
+											<?php } ?>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					<?php } ?>
 
 				<?php
 				$x_col = 6;

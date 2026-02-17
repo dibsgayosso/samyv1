@@ -1439,6 +1439,7 @@ class Receivings extends Secure_area
 		$data['show_store_account_payment_status'] = $this->Receiving->is_store_account_charge_receiving($receiving_id);
 		$data['store_account_payment_summary'] = $data['show_store_account_payment_status'] ? $this->Receiving->get_store_account_receiving_payment_summary($receiving_id) : NULL;
 		$data['is_store_account_receiving_paid'] = $data['show_store_account_payment_status'] ? $data['store_account_payment_summary']['is_paid'] : NULL;
+		$data['store_account_payment_logs'] = $data['show_store_account_payment_status'] ? $this->Receiving->get_store_account_payment_logs($receiving_id) : array();
 
 		if (!empty($receiving_info['validated_by']))
 		{
