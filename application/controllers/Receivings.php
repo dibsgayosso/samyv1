@@ -1437,7 +1437,8 @@ class Receivings extends Secure_area
 		$data['can_validate_receiving'] = $this->Employee->has_module_action_permission('receivings', 'validate_receiving', $this->Employee->get_logged_in_employee_info()->person_id);
 		$data['can_receive_store_account_payment'] = $this->Employee->has_module_action_permission('receivings', 'receive_store_account_payment', $this->Employee->get_logged_in_employee_info()->person_id);
 		$data['show_store_account_payment_status'] = $this->Receiving->is_store_account_charge_receiving($receiving_id);
-		$data['is_store_account_receiving_paid'] = $data['show_store_account_payment_status'] ? $this->Receiving->is_store_account_charge_receiving_paid($receiving_id) : NULL;
+		$data['store_account_payment_summary'] = $data['show_store_account_payment_status'] ? $this->Receiving->get_store_account_receiving_payment_summary($receiving_id) : NULL;
+		$data['is_store_account_receiving_paid'] = $data['show_store_account_payment_status'] ? $data['store_account_payment_summary']['is_paid'] : NULL;
 
 		if (!empty($receiving_info['validated_by']))
 		{

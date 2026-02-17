@@ -34,7 +34,16 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 	}
 
 	$validation_status_label = empty($receiving_validated_at) ? lang('receivings_validation_pending', '', array(), TRUE) : lang('receivings_validation_approved', '', array(), TRUE);
-	$payment_status_label = !empty($show_store_account_payment_status) ? (!empty($is_store_account_receiving_paid) ? lang('common_paid', '', array(), TRUE) : lang('common_unpaid', '', array(), TRUE)) : lang('common_not_set', '', array(), TRUE);
+	$payment_status_label = lang('common_not_set', '', array(), TRUE);
+	if (!empty($show_store_account_payment_status)) {
+		if (!empty($store_account_payment_summary['is_paid'])) {
+			$payment_status_label = lang('common_paid', '', array(), TRUE);
+		} elseif (!empty($store_account_payment_summary['is_partial'])) {
+			$payment_status_label = lang('receivings_payment_status_partial', '', array(), TRUE);
+		} else {
+			$payment_status_label = lang('common_unpaid', '', array(), TRUE);
+		}
+	}
 	$validation_status_datetime = !empty($receiving_validated_at) ? date(get_date_format() . ' ' . get_time_format(), strtotime($receiving_validated_at)) : $transaction_time;
 	$validated_by_label = !empty($receiving_validated_by_name) ? $receiving_validated_by_name : lang('common_not_set', '', array(), TRUE);
 
@@ -163,6 +172,11 @@ for ($k = 1; $k <= NUMBER_OF_PEOPLE_CUSTOM_FIELDS; $k++) {
 								<div class="status-line"><?php echo lang('receivings_validated_by', '', array(), TRUE); ?>: <strong><?php echo H($validated_by_label); ?></strong></div>
 								<div class="status-line"><?php echo lang('common_date', '', array(), TRUE); ?>: <strong><?php echo H($validation_status_datetime); ?></strong></div>
 								<div class="status-line"><?php echo lang('receivings_payment_status', '', array(), TRUE); ?>: <strong><?php echo H($payment_status_label); ?></strong></div>
+								<?php if (!empty($show_store_account_payment_status)) { ?>
+									<div class="status-line"><?php echo lang('common_total_charge_to_account', '', array(), TRUE); ?>: <strong><?php echo to_currency($store_account_payment_summary['total_charge']); ?></strong></div>
+									<div class="status-line"><?php echo lang('common_amount_paid', '', array(), TRUE); ?>: <strong><?php echo to_currency($store_account_payment_summary['paid_amount']); ?></strong></div>
+									<div class="status-line"><?php echo lang('common_amount_due', '', array(), TRUE); ?>: <strong><?php echo to_currency($store_account_payment_summary['remaining_amount']); ?></strong></div>
+								<?php } ?>
 							</div>
 						</div>
 					</div>

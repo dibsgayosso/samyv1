@@ -130,6 +130,7 @@ $lang['receivings_validation_status'] = 'Validation';
 $lang['receivings_validation_pending'] = 'Pending validation';
 $lang['receivings_validation_approved'] = 'Validated';
 $lang['receivings_payment_status'] = 'Payment status';
+$lang['receivings_payment_status_partial'] = 'Partial payment';
 $lang['receivings_validated_by'] = 'Validated by';
 $lang['receivings_validation_success'] = 'Receiving validated successfully.';
 $lang['receivings_validation_failed'] = 'Unable to validate receiving.';

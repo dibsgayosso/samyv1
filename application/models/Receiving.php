@@ -1911,10 +1911,50 @@ class Receiving extends MY_Model
 
 	function is_store_account_charge_receiving_paid($receiving_id)
 	{
+		$summary = $this->get_store_account_receiving_payment_summary($receiving_id);
+		return $summary['is_paid'];
+	}
+
+	function get_store_account_receiving_payment_summary($receiving_id)
+	{
+		$summary = array(
+			'total_charge' => 0,
+			'paid_amount' => 0,
+			'remaining_amount' => 0,
+			'is_paid' => FALSE,
+			'is_partial' => FALSE,
+		);
+
+		if (!$this->is_store_account_charge_receiving($receiving_id))
+		{
+			return $summary;
+		}
+
+		$total_charge = (float)$this->get_store_account_payment_total($receiving_id);
+
+		$this->db->select('partial_payment_amount');
 		$this->db->from('supplier_store_accounts_paid_receivings');
 		$this->db->where('receiving_id', $receiving_id);
-		$this->db->where('partial_payment_amount', 0);
-		return $this->db->count_all_results() > 0;
+		$row = $this->db->get()->row_array();
+
+		if ($row)
+		{
+			$remaining_amount = max(0, (float)$row['partial_payment_amount']);
+		}
+		else
+		{
+			$remaining_amount = max(0, $total_charge);
+		}
+
+		$paid_amount = max(0, $total_charge - $remaining_amount);
+
+		$summary['total_charge'] = $total_charge;
+		$summary['paid_amount'] = $paid_amount;
+		$summary['remaining_amount'] = $remaining_amount;
+		$summary['is_paid'] = $total_charge > 0 && $remaining_amount <= 0;
+		$summary['is_partial'] = $paid_amount > 0 && $remaining_amount > 0;
+
+		return $summary;
 	}
 
 	function get_unpaid_store_account_recv_ids($supplier_id,$limit = 30)
@@ -1948,7 +1988,7 @@ class Receiving extends MY_Model
 	{
 		$store_account_in_all_languages = get_all_language_values_for_key('common_store_account','common');
 		
-		$this->db->select('receivings.receiving_id, receiving_time, SUM(payment_amount) - COALESCE(partial_payment_amount,0) as payment_amount,receivings.comment,receivings.validated_at,receivings.validated_by', false);
+		$this->db->select('receivings.receiving_id, receiving_time, SUM(payment_amount) as total_charge, SUM(payment_amount) - COALESCE(partial_payment_amount,0) as payment_amount, SUM(payment_amount) - COALESCE(partial_payment_amount,0) as remaining_amount, COALESCE(partial_payment_amount,0) as remaining_balance_marker, receivings.comment,receivings.validated_at,receivings.validated_by', false);
 		$this->db->from('receivings');
 		
 		$this->db->where('receivings.deleted',0);

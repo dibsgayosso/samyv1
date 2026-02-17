@@ -594,7 +594,19 @@ $has_cost_price_permission = $this->Employee->has_module_action_permission('item
 						$row_class = $is_paid ? 'success' : 'active';
 						$btn_class = $is_paid ? 'btn-danger' : 'btn-primary';
 						$validation_label = $is_validated ? lang('receivings_validation_approved') : lang('receivings_validation_pending');
-						$payment_label = $is_paid ? lang('common_paid') : lang('common_unpaid');
+						$paid_amount = (float)$unpaid_receiving['total_charge'] - (float)$unpaid_receiving['remaining_amount'];
+						if ($is_paid)
+						{
+							$payment_label = lang('common_paid');
+						}
+						elseif ($paid_amount > 0)
+						{
+							$payment_label = lang('receivings_payment_status_partial');
+						}
+						else
+						{
+							$payment_label = lang('common_unpaid');
+						}
 						$can_pay = $is_validated || $is_paid;
 					?>
 						<tr class="<?php echo $row_class; ?>">
