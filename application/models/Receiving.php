@@ -286,26 +286,37 @@ class Receiving extends MY_Model
 				$full_receiving_charge_row = $this->db->get()->row_array();
 				$full_receiving_charge = $full_receiving_charge_row['full_receiving_charge'];
 				
-				if ($this->is_store_accounts_paid_receiving_already_exist($receiving_id_paid))
-				{
-					$this->db->select('partial_payment_amount');
-					$this->db->from('supplier_store_accounts_paid_receivings');
-					$this->db->where('receiving_id',$receiving_id_paid);
-					$paid_amount_row_for_receiving = $this->db->get()->row_array();
-					$already_paid_amount = $paid_amount_row_for_receiving['partial_payment_amount'];
-					
-					$is_paid_in_full = $full_receiving_charge <= $cart->paid_store_account_amounts[$receiving_id_paid] + $already_paid_amount;
-					$new_partial_payment_amount = $cart->paid_store_account_amounts[$receiving_id_paid] + $already_paid_amount;
-					$this->db->where('receiving_id',$receiving_id_paid);
-					$this->db->update('supplier_store_accounts_paid_receivings',array('partial_payment_amount' => !$is_paid_in_full ? $new_partial_payment_amount : 0));
+					if ($this->is_store_accounts_paid_receiving_already_exist($receiving_id_paid))
+					{
+						$this->db->select('partial_payment_amount');
+						$this->db->from('supplier_store_accounts_paid_receivings');
+						$this->db->where('receiving_id',$receiving_id_paid);
+						$paid_amount_row_for_receiving = $this->db->get()->row_array();
+						$already_paid_amount = $paid_amount_row_for_receiving['partial_payment_amount'];
+						
+						$is_paid_in_full = $full_receiving_charge <= $cart->paid_store_account_amounts[$receiving_id_paid] + $already_paid_amount;
+						$new_partial_payment_amount = $cart->paid_store_account_amounts[$receiving_id_paid] + $already_paid_amount;
+						$this->db->where('receiving_id',$receiving_id_paid);
+						$this->db->update('supplier_store_accounts_paid_receivings',array('partial_payment_amount' => !$is_paid_in_full ? $new_partial_payment_amount : 0, 'store_account_payment_receiving_id' => $receiving_id));
+					}
+					else
+					{
+						$is_paid_in_full = $full_receiving_charge <= $cart->paid_store_account_amounts[$receiving_id_paid];
+						$this->db->insert('supplier_store_accounts_paid_receivings',array('receiving_id' => $receiving_id_paid,'store_account_payment_receiving_id' => $receiving_id,'partial_payment_amount' => !$is_paid_in_full ? $cart->paid_store_account_amounts[$receiving_id_paid] : 0));
+					}
+
+					if ($this->db->table_exists('receivings_store_account_payment_logs') && isset($cart->paid_store_account_amounts[$receiving_id_paid]) && $cart->paid_store_account_amounts[$receiving_id_paid] > 0)
+					{
+						$this->db->insert('receivings_store_account_payment_logs', array(
+							'receiving_id' => $receiving_id_paid,
+							'store_account_payment_receiving_id' => $receiving_id,
+							'employee_id' => $employee_id,
+							'payment_amount' => $cart->paid_store_account_amounts[$receiving_id_paid],
+							'payment_time' => date('Y-m-d H:i:s'),
+						));
+					}
 				}
-				else
-				{
-					$is_paid_in_full = $full_receiving_charge <= $cart->paid_store_account_amounts[$receiving_id_paid];
-					$this->db->insert('supplier_store_accounts_paid_receivings',array('receiving_id' => $receiving_id_paid,'store_account_payment_receiving_id' => $receiving_id,'partial_payment_amount' => !$is_paid_in_full ? $cart->paid_store_account_amounts[$receiving_id_paid] : 0));
-				}
-			}
-		}		
+			}		
 		
 		//Only update store account payments if we are not suspended
 		if (!$suspended)
@@ -1898,7 +1909,89 @@ class Receiving extends MY_Model
 		$this->db->where('receiving_id',$recv_id);
 		return $this->db->get();
 	}
-	
+
+	function is_store_account_charge_receiving($receiving_id)
+	{
+		$store_account_in_all_languages = get_all_language_values_for_key('common_store_account','common');
+
+		$this->db->from('receivings_payments');
+		$this->db->where('receiving_id', $receiving_id);
+		$this->db->where_in('payment_type', $store_account_in_all_languages);
+		return $this->db->count_all_results() > 0;
+	}
+
+	function is_store_account_charge_receiving_paid($receiving_id)
+	{
+		$summary = $this->get_store_account_receiving_payment_summary($receiving_id);
+		return $summary['is_paid'];
+	}
+
+	function get_store_account_receiving_payment_summary($receiving_id)
+	{
+		$summary = array(
+			'total_charge' => 0,
+			'paid_amount' => 0,
+			'remaining_amount' => 0,
+			'is_paid' => FALSE,
+			'is_partial' => FALSE,
+		);
+
+		if (!$this->is_store_account_charge_receiving($receiving_id))
+		{
+			return $summary;
+		}
+
+		$total_charge = (float)$this->get_store_account_payment_total($receiving_id);
+
+		$this->db->select('partial_payment_amount');
+		$this->db->from('supplier_store_accounts_paid_receivings');
+		$this->db->where('receiving_id', $receiving_id);
+		$row = $this->db->get()->row_array();
+
+		if ($row)
+		{
+			$partial_paid_amount = (float)$row['partial_payment_amount'];
+			if ($partial_paid_amount == 0)
+			{
+				$paid_amount = $total_charge;
+				$remaining_amount = 0;
+			}
+			else
+			{
+				$paid_amount = max(0, $partial_paid_amount);
+				$remaining_amount = max(0, $total_charge - $partial_paid_amount);
+			}
+		}
+		else
+		{
+			$remaining_amount = max(0, $total_charge);
+			$paid_amount = 0;
+		}
+
+		$summary['total_charge'] = $total_charge;
+		$summary['paid_amount'] = $paid_amount;
+		$summary['remaining_amount'] = $remaining_amount;
+		$summary['is_paid'] = $total_charge > 0 && $remaining_amount <= 0;
+		$summary['is_partial'] = $paid_amount > 0 && $remaining_amount > 0;
+
+		return $summary;
+	}
+
+	function get_store_account_payment_logs($receiving_id)
+	{
+		if (!$this->db->table_exists('receivings_store_account_payment_logs'))
+		{
+			return array();
+		}
+
+		$this->db->select('receivings_store_account_payment_logs.payment_amount, receivings_store_account_payment_logs.payment_time, receivings_store_account_payment_logs.store_account_payment_receiving_id, receivings_store_account_payment_logs.employee_id, people.first_name, people.last_name');
+		$this->db->from('receivings_store_account_payment_logs');
+		$this->db->join('people', 'people.person_id = receivings_store_account_payment_logs.employee_id', 'left');
+		$this->db->where('receivings_store_account_payment_logs.receiving_id', $receiving_id);
+		$this->db->order_by('receivings_store_account_payment_logs.payment_time', 'asc');
+		return $this->db->get()->result_array();
+	}
+
 	function get_unpaid_store_account_recv_ids($supplier_id,$limit = 30)
 	{
 		
@@ -1930,7 +2023,7 @@ class Receiving extends MY_Model
 	{
 		$store_account_in_all_languages = get_all_language_values_for_key('common_store_account','common');
 		
-		$this->db->select('receivings.receiving_id, receiving_time, SUM(payment_amount) - COALESCE(partial_payment_amount,0) as payment_amount,receivings.comment,receivings.validated_at,receivings.validated_by', false);
+		$this->db->select('receivings.receiving_id, receiving_time, SUM(payment_amount) as total_charge, SUM(payment_amount) - COALESCE(partial_payment_amount,0) as payment_amount, SUM(payment_amount) - COALESCE(partial_payment_amount,0) as remaining_amount, COALESCE(partial_payment_amount,0) as remaining_balance_marker, receivings.comment,receivings.validated_at,receivings.validated_by', false);
 		$this->db->from('receivings');
 		
 		$this->db->where('receivings.deleted',0);
@@ -1950,6 +2043,18 @@ class Receiving extends MY_Model
 		$this->db->order_by('receiving_time');
 		$this->db->group_by('receiving_id');
 		return $this->db->get()->result_array();
+	}
+
+	function get_unpaid_store_account_receiving_amount($receiving_id)
+	{
+		$unpaid_receivings = $this->get_unpaid_store_account_recvs(array($receiving_id));
+
+		if (empty($unpaid_receivings))
+		{
+			return 0;
+		}
+
+		return (float)$unpaid_receivings[0]['payment_amount'];
 	}
 	
 	function mark_all_unpaid_receivings_paid($supplier_id = '')

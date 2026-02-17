@@ -99,6 +99,7 @@ $lang['module_work_orders'] = 'Work Orders';
 $lang['module_work_orders_desc'] = 'Work Orders';
 $lang['module_manage_statuses'] = 'Manage Statuses';
 $lang['module_action_delete_suspended_receiving'] = 'Delete Suspended Receiving';
+$lang['module_action_validate_receiving'] = 'Validate receiving';
 $lang['module_invoices'] = 'Invoices';
 $lang['invoices_add'] = 'Add Invoice';
 $lang['invoices_edit'] = 'Edit Invoice';
